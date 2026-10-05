@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MPC-001 Conceptual Master v2</title>
+    <!-- Installable Manifest Specifications -->
+    <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22MPC-001%20Master%22%2C%22short_name%22%3A%22MPC001%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f8fafc%22%2C%22theme_color%22%3A%22%231e40af%22%7D">
+    <script src="https://tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col items-center p-4">
+
+    <!-- Active App Shell -->
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 mt-4 flex-grow flex flex-col justify-between border border-slate-200">
+        
+        <!-- Header & Motivation Metres -->
+        <div>
+            <div class="flex justify-between items-center mb-4">
+                <span id="module-tag" class="text-xs font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-3 py-1 rounded-md">Module Tracker</span>
+                <div class="text-right">
+                    <span id="streak-badge" class="text-xs font-bold text-orange-700 bg-orange-50 px-2.5 py-1 rounded-md">🔥 Streak: 0</span>
+                </div>
+            </div>
+            
+            <!-- Visual Progress Metric -->
+            <div class="w-full bg-slate-200 h-2 rounded-full mb-6">
+                <div id="progress" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+
+            <!-- Core Evaluation Display -->
+            <div id="question-box" class="mb-6">
+                <h2 id="question-text" class="text-base font-bold text-slate-800 mb-5 leading-snug">Assembling curriculum frameworks...</h2>
+                <div id="options-container" class="space-y-3">
+                    <!-- Target Options Rendered Dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-Time Conceptual Feedback System -->
+        <div>
+            <div id="feedback-box" class="hidden p-4 rounded-xl mb-4 text-xs font-medium leading-relaxed"></div>
+            <button id="next-btn" class="hidden w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md active:scale-[0.98]">
+                Advance Module →
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Expanded Database mapping concepts from past tests & Easy Notes PDF
+        const quizData = [
+            {
+                module: "Language Acquisition",
+                question: "Noam Chomsky uses the phrase 'Poverty of the Stimulus' to support his Innateness Theory by asserting that:",
+                options: [
+                    "Children rely completely on environmental rewards to correct grammatical anomalies.",
+                    "Linguistic inputs in a child's surroundings are too limited to explain their rapid, structured language acquisition.",
+                    "Children mimic language sounds without mapping their structural underlying meaning.",
+                    "The Language Acquisition Device (LAD) only functions during intensive formal teaching."
+                ],
+                correct: 1,
+                explanation: "The 'Poverty of the Stimulus' argument highlights that children are not exposed to enough linguistic variation to learn complex syntax via behavioral conditioning alone, demonstrating an innate grammatical blueprint (Universal Grammar)."
+            },
+            {
+                module: "Intelligence Frameworks",
+                question: "In J.P. Guilford's Structure of Intellect (SOI) Cubical Model, into which specific dimension are 'Divergent Thinking' and 'Evaluation' categorized?",
+                options: ["Contents", "Products", "Operations", "Systems"],
+                correct: 2,
+                explanation: "Operations represent 'how the mind works' or the active processing steps. Guilford identified 6 unique Operations: Cognition, Memory Recording, Memory Retention, Divergent Thinking, Convergent Thinking, and Evaluation."
+            },
+            {
+                module: "Memory Architectures",
+                question: "According to the Atkinson-Shiffrin Stage Model, what structural mechanism causes the loss of item fields within Short-Term Memory (STM)?",
+                options: [
+                    "Trace decay and displacement",
+                    "A semantic storage schema breakdown",
+                    "Proactive cognitive retrieval blockade",
+                    "Deficient contextual retrieval signals"
+                ],
+                correct: 0,
+                explanation: "Atkinson & Shiffrin's framework states that STM has a finite duration (15–30 seconds) and structural capacity limits. Information degrades automatically over time (decay) or is forced out by incoming data (displacement)."
+            },
+            {
+                module: "Problem Solving",
+                question: "If an individual struggles to solve a novel dilemma because they persistently apply an operational method that proved effective in past scenarios, they are facing which cognitive barrier?",
+                options: ["Functional Fixedness", "Mental Set", "Retroactive Inhibition", "Confirmation Bias"],
+                correct: 1,
+                explanation: "A Mental Set is an operational tendency to approach situations using frameworks or rules that worked previously, creating an obstacle to finding alternative, more effective problem-solving paths."
+            },
+            {
+                module: "Intelligence Frameworks",
+                question: "Under Guilford's SOI framework, if you arrange isolated concepts or data points into a structural, interrelated cluster, which 'Product' dimension have you developed?",
+                options: ["Units", "Classes", "Systems", "Transformations"],
+                correct: 2,
+                explanation: "Products represent how information is structured or organized by our mental operations. 'Systems' specifically denote organized aggregates or structural sets of items working together."
+            }
+        ];
+
+        let currentIndex = 0;
+        let streak = 0;
+
+        const moduleTag = document.getElementById('module-tag');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackBox = document.getElementById('feedback-box');
+        const nextBtn = document.getElementById('next-btn');
+        const progressBar = document.getElementById('progress');
+        const streakBadge = document.getElementById('streak-badge');
+
+        function loadQuestion() {
+            feedbackBox.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+            
+            const currentItem = quizData[currentIndex];
+            moduleTag.innerText = currentItem.module;
+            questionText.innerText = currentItem.question;
+            optionsContainer.innerHTML = '';
+
+            progressBar.style.width = `${(currentIndex / quizData.length) * 100}%`;
+
+            currentItem.options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 border border-slate-200 rounded-xl hover:border-blue-500 hover:bg-blue-50/40 transition-all font-medium text-slate-700 text-xs sm:text-sm";
+                btn.innerText = option;
+                btn.onclick = () => verifySelection(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function verifySelection(selectedIndex, selectedBtn) {
+            const currentItem = quizData[currentIndex];
+            const buttons = optionsContainer.getElementsByTagName('button');
+
+            for (let btn of buttons) { btn.disabled = true; }
+
+            if (selectedIndex === currentItem.correct) {
+                selectedBtn.className = "w-full text-left p-4 border border-emerald-500 bg-emerald-50 rounded-xl text-emerald-800 font-semibold text-xs sm:text-sm";
+                feedbackBox.className = "p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl mb-4 text-xs font-medium";
+                feedbackBox.innerHTML = `<strong>✨ Concept Mastered!</strong><br>${currentItem.explanation}`;
+                streak++;
+            } else {
+                selectedBtn.className = "w-full text-left p-4 border border-rose-400 bg-rose-50 rounded-xl text-rose-800 font-medium text-xs sm:text-sm";
+                buttons[currentItem.correct].className = "w-full text-left p-4 border border-emerald-500 bg-emerald-50 rounded-xl text-emerald-800 font-semibold text-xs sm:text-sm";
+                feedbackBox.className = "p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl mb-4 text-xs font-medium";
+                feedbackBox.innerHTML = `<strong>💡 Core Insight Review:</strong><br>${currentItem.explanation}`;
+                streak = 0;
+            }
+
+            streakBadge.innerText = `🔥 Streak: ${streak}`;
+            feedbackBox.classList.remove('hidden');
+            nextBtn.classList.remove('hidden');
+        }
+
+        nextBtn.onclick = () => {
+            currentIndex++;
+            if (currentIndex < quizData.length) {
+                loadQuestion();
+            } else {
+                currentIndex = 0;
+                progressBar.style.width = "100%";
+                alert("🎉 Structural Framework Retained! Resetting module pathways to secure long-term active recall.");
+                loadQuestion();
+            }
+        };
+
+        loadQuestion();
+    </script>
+</body>
+</html>
